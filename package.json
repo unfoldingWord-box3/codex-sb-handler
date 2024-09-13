@@ -1,0 +1,64 @@
+{
+	"name": "sb-handler-sample",
+	"displayName": "sbHandler-sample",
+	"description": "sbHandler example for VS Code",
+	"version": "0.0.1",
+	"publisher": "unfoldingWord",
+	"repository": "https://github.com/unfoldingWord",
+	"engines": {
+		"vscode": "^1.87.2"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"workspaceContains:metadata.json"
+	],	
+	"main": "./out/extension.js",
+	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "sb-explorer",
+					"title": "Scripture Burrito Workspace",
+					"icon": "media/book.svg"
+				}
+			]
+		},
+		"views": {
+			"sb-explorer": [
+				{
+					"id": "sb-explorer",
+					"name": "Scripture Burrito Workspace",
+					"visibility": "visible",
+					"initialSize": 1,
+					"icon": "media/book.svg",
+					"contextualTitle": "Scripture Burrito Workspace"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "extension.sbHandler",
+				"title": "New Scripture Burrito"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "pnpm run compile",
+		"compile": "tsc -p ./",
+		"lint": "eslint \"src/**/*.ts\"",
+		"watch": "tsc -watch -p ./"
+	},
+	"devDependencies": {
+		"@types/node": "^18.19.29",
+		"@types/vscode": "^1.88.0",
+		"@typescript-eslint/eslint-plugin": "^7.5.0",
+		"@typescript-eslint/parser": "^7.5.0",
+		"eslint": "^8.57.0",
+		"typescript": "^5.4.4"
+	},
+	"dependencies": {
+		"codex-types": "^0.0.2"
+	}
+}
