@@ -13,7 +13,7 @@
 	],
 	"activationEvents": [
 		"workspaceContains:metadata.json"
-	],	
+	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"viewsContainers": {
@@ -59,6 +59,10 @@
 		"typescript": "^5.4.4"
 	},
 	"dependencies": {
-		"codex-types": "^0.0.2"
+		"codex-types": "^0.0.2",
+		"fs-extra": "^11.2.0",
+		"proskomma-core": "^0.10.10",
+		"proskomma-json-tools": "^0.8.21",
+		"xxhashjs": "^0.2.2"
 	}
 }
