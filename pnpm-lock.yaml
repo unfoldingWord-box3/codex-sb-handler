@@ -20,6 +20,9 @@ importers:
       proskomma-json-tools:
         specifier: ^0.8.21
         version: 0.8.21
+      xregexp:
+        specifier: ^5.1.1
+        version: 5.1.1
       xxhashjs:
         specifier: ^0.2.2
         version: 0.2.2

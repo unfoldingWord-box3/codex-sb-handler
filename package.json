@@ -63,6 +63,7 @@
 		"fs-extra": "^11.2.0",
 		"proskomma-core": "^0.10.10",
 		"proskomma-json-tools": "^0.8.21",
+		"xregexp": "^5.1.1",
 		"xxhashjs": "^0.2.2"
 	}
 }

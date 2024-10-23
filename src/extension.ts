@@ -5,6 +5,7 @@ import {
   window,
   workspace,
 } from "vscode";
+import { decomposePerfAction } from './decomposePerf';
 import { SBTreeNavigationProvider } from "./providers/treeViews/scriptureTreeViewProvider";
 import * as path from "path";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -15,9 +16,80 @@ import {Proskomma} from "proskomma-core";
 import {h32} from "xxhashjs";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
-import {PipelineHandler} from "proskomma-json-tools";
+import { PipelineHandler } from "proskomma-json-tools";
+
+const decomposePerf = [
+  {
+    "id": 0,
+    "type": "Inputs",
+    "inputs": {
+      "perf": "json"
+    }
+  },
+  {
+    "id": 1,
+    "title": "Decompose PERF",
+    "name": "decomposePerf",
+    "transformName": "decomposePerf",
+    "type": "Transform",
+    "inputs": [
+      {
+        "name": "perf",
+        "type": "json",
+        "source": "Input perf"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "perf",
+        "type": "json"
+      },
+      {
+        "name": "extractedAlignment",
+        "type": "json"
+      },
+      {
+        "name": "extractedInlineElements",
+        "type": "json"
+      },
+      {
+        "name": "verseTextMap",
+        "type": "json"
+      }
+    ],
+    "description": "PERF=>PERF: Decompose text and markup"
+  },
+  {
+    "id": 999,
+    "type": "Outputs",
+    "outputs": [
+      {
+        "name": "perf",
+        "type": "json",
+        "source": "Transform 1 perf"
+      },
+      {
+        "name": "extractedAlignment",
+        "type": "json",
+        "source": "Transform 1 extractedAlignment"
+      },
+      {
+        "name": "extractedInlineElements",
+        "type": "json",
+        "source": "Transform 1 extractedInlineElements"
+      },
+      {
+        "name": "verseTextMap",
+        "type": "json",
+        "source": "Transform 1 verseTextMap"
+      }
+    ]
+  }
+];
 
 const pipelineH = new PipelineHandler({
+    pipelines: { decomposePerf },
+    transforms: { decomposePerf: decomposePerfAction},
     proskomma: new Proskomma(),
     verbose: false
 });
@@ -30,7 +102,6 @@ const typeToSbType = {
 };
 
 const verbose = false;
-const verifyDir = "./test";
 
 const readEntryBookResource = async (
   workspaceFolder: string | undefined,
@@ -48,6 +119,24 @@ const readEntryBookResource = async (
   }
 };
 
+const writeEntryText = async (
+  workspaceFolder: string | undefined,
+  rawContent: any, 
+  resourceName: string
+) => {
+  try {
+    workspace.fs.createDirectory(vscode.Uri.file(`${workspaceFolder}`));
+    const usePath = vscode.Uri.file(`${workspaceFolder}/${resourceName}`);
+    const encoder = new TextEncoder();
+    const uintArrayValue = encoder.encode(rawContent);
+    await workspace.fs.writeFile(usePath, uintArrayValue);
+  } catch (error: any) {
+    window.showErrorMessage(
+      `Failed to write file: ${error.message}`
+    );
+  }
+};
+
 const writeEntryJson = async (
   workspaceFolder: string | undefined,
   rawContent: any, 
@@ -55,6 +144,7 @@ const writeEntryJson = async (
 ) => {
   try {
     const content = JSON.stringify(rawContent);
+    workspace.fs.createDirectory(vscode.Uri.file(`${workspaceFolder}`));
     const usePath = vscode.Uri.file(`${workspaceFolder}/${resourceName}`);
     const encoder = new TextEncoder();
     const uintArrayValue = encoder.encode(content);
@@ -64,6 +154,27 @@ const writeEntryJson = async (
       `Failed to write file: ${error.message}`
     );
   }
+};
+
+const checkFileExists = async (uri: vscode.Uri) => {
+  try {
+      await vscode.workspace.fs.stat(uri);
+      return true;
+  } catch {
+      return false;
+  }
+};
+
+const checkFileIsUpToDate = async (
+  workspaceFolder: string | undefined,
+  basename: string
+) => {
+  const usePath = `${workspaceFolder}/uwj/${basename}.verses`;
+  const useUri = vscode.Uri.file(usePath);
+  if (await checkFileExists(useUri)) {
+    return true;
+  }
+  return false;
 };
 
 const getBpkg = async (
@@ -92,13 +203,18 @@ const getBpkg = async (
     }, 
     idStr: any
   ) => {
-  const bookResources = Object.keys(metadata.ingredients).filter(r => r.endsWith('.usfm'));
-  const bookContent = [];
-  for (const book of bookResources) {
-      const bRes = await readEntryBookResource(workspaceFolder,book);
-      console.log(book);
-      bookContent.push(bRes);
-  }
+  const bookResources = [];
+  const checkbookResources = Object.keys(metadata.ingredients).filter(r => r.endsWith('.usfm'));
+  const bookContent: any[] = [];
+  for (const book of checkbookResources) {
+    const basename = path.basename(trimExt(book));
+    if (await checkFileIsUpToDate(workspaceFolder,basename)) {
+      // const bRes = await readEntryBookResource(workspaceFolder,book);
+      console.log("found : " +basename);
+      // bookContent.push(bRes);
+      // bookResources.push(book);
+    }
+}
   pk.importDocuments(
       {
           source: "codex",
@@ -119,8 +235,10 @@ const getBpkg = async (
       metadataTags += ` "script:${metadata.script}"`;
   }
   pk.gqlQuerySync(`mutation { addDocSetTags(docSetId: "${docSetId}", tags: [${metadataTags}]) }`);
-  const bpkg = pk.serializeBpkg(docSetId);
-  writeEntryJson(workspaceFolder,bpkg,`${idStr}.bpkg`);
+ 
+  // const bpkg = pk.serializeBpkg(docSetId);
+  // writeEntryJson(workspaceFolder,bpkg,`${idStr}.bpkg`);
+
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   console.log("finished writing book package successfully");
 };
@@ -132,21 +250,37 @@ async function doPerfStripAlignment(
   perf: any
 ) {
 
-  let output;
+  let output: { 
+    verseTextMap: any; 
+    perf: any; 
+    extractedAlignment: any; 
+    extractedInlineElements: any; 
+  };
   try {
     output = await pipelineH.runPipeline(
-        'stripAlignmentPipeline', {
+        'decomposePerf', {
             perf
         }
     );
-    const _alignment = {
-        strippedAlignment: output.strippedAlignment,
-        unalignedWords: output.unalignedWords
-    };
-    const perfOutput = output.perf;
-    const alignmentOutput = _alignment;
-    await writeEntryJson(workspaceFolder, perfOutput, path.join(`${verifyDir}/perf/`, `${bookName}.json`));
-    await writeEntryJson(workspaceFolder, alignmentOutput, path.join(`${verifyDir}/alignment/`, `${bookName}.json`));
+    // const verifyDir = "./test";
+    const verifyDir = ".";
+    const outputDir = `${verifyDir}/uwj/`;
+
+    const versesPath = path.join(outputDir, `${bookName}.verses`);
+    let verseOutput: string = "";
+    Object.keys(output.verseTextMap).forEach(chKey => {
+      Object.keys(output.verseTextMap[chKey]).forEach(vKey => {
+        const curStr = verseOutput;
+        verseOutput = `${curStr}${chKey}:${vKey} ${output.verseTextMap[chKey][vKey]}\n`;
+      });
+    });
+    await writeEntryText(workspaceFolder, verseOutput, versesPath);
+    const seqPath = path.join(outputDir, `${bookName}.seq`);
+    await writeEntryJson(workspaceFolder, output.perf, seqPath);
+    const alignPath = path.join(outputDir, `${bookName}.align`);
+    await writeEntryJson(workspaceFolder, output.extractedAlignment, alignPath);
+    const seqMarkupPath = path.join(outputDir, `${bookName}.uwjmk`);
+    await writeEntryJson(workspaceFolder, output.extractedInlineElements, seqMarkupPath);
   } catch (err) {
       console.log(err);
   }
@@ -191,11 +325,6 @@ async function doScriptureHandling(
                     type: "string",
                     regex: "^[^\\s]+$"
                 },
-                // {
-                //     name: "revision",
-                //     type: "string",
-                //     regex: "^[^\\s]+$"
-                // },
                 {
                     name: "bpkgVersion",
                     type: "string",
@@ -203,11 +332,16 @@ async function doScriptureHandling(
                 },
             ]);
 
-            // const bpkg = getBpkg(workspaceFolder, pk, metadata, idStr);
+            const bpkg = await getBpkg(workspaceFolder, pk, metadata, idStr);
+
+            // check data.bpkg or create one, if read only, else no need for data.bpkg (strip and keep on merging instead)
+            // use uwj and codex to ingest, if exist, else create from usfm
+            // keep uwj and codex in sync with usfm, if "x-usfm-ws" type
+            // - in future -> keep uwj (version 2, based on usj) and codex in sync with usj, if "x-usj-ws" type
             
-            const rawBpkg = await readEntryBookResource(workspaceFolder, "f848bc5.bpkg");
-            const bpkg = JSON.parse(rawBpkg || "");
-            pk.loadSuccinctDocSet(bpkg);
+            // const rawBpkg = await readEntryBookResource(workspaceFolder, "f848bc5.bpkg");
+            // const bpkg = JSON.parse(rawBpkg || "");
+            // pk.loadSuccinctDocSet(bpkg);
             const docSetTags = pk.gqlQuerySync('{docSets { tagsKv {key value} } }').data.docSets[0].tagsKv;
             for (const kv of docSetTags) {
                 if (["nOT", "nNT", "nDC"].includes(kv.key)) {
@@ -245,7 +379,7 @@ async function doScriptureHandling(
             try {
                 const res = pk.gqlQuerySync(`{ document(id: """${doc.id}""") { bookCode: header(id:"bookCode") perf } }`);
                 const curDoc = res?.data?.document;
-                console.log(curDoc.bookCode);
+                console.log("Iterating perf from " + curDoc.bookCode);
                 const curPerf = JSON.parse(res?.data?.document?.perf);
                 try {
                     await doPerfStripAlignment(workspaceFolder, doc.book,curPerf);
@@ -378,6 +512,21 @@ async function getProjectMetadata(): Promise<any> {
   }
   return projectMetadata;
 }
+const trimExt = (fileName: string) => {
+  return (fileName.indexOf('.') === -1)
+    ? fileName 
+    : fileName.split('.').slice(0, -1).join('.');
+};
+
+const verifyChangedFile = (uri: vscode.Uri) => {
+  const uriString = uri.fsPath ?? "";
+  const re = /(?:\.([^.]+))?$/;
+  const ext = re.exec(uriString)![1];
+  if (["verses", "seq", "align", "uwjmk"].includes(ext)) {
+    const basename = path.basename(trimExt(uriString));
+    console.log("change to " + basename + " - " + ext);
+  }
+};
 
 export async function activate(context: ExtensionContext) {
   // Create a status bar item
@@ -409,6 +558,10 @@ export async function activate(context: ExtensionContext) {
     scriptureTreeViewProvider
   );
 
+// vscode.workspace.createFileSystemWatcher
+  const watcher = workspace.createFileSystemWatcher("**/*.*");
+  watcher.onDidChange(uri => verifyChangedFile(uri));
+
 	let statusTypeText = "Scripture Burrito Workspace";
 	const relList = sbMetadata?.relationships;
   let sbType = "ro";
@@ -431,14 +584,13 @@ export async function activate(context: ExtensionContext) {
 		}
 	}
   const curHash = h32(JSON.stringify(sbMetadata.identification), 0xEDCBA987).toString(16);
-  status.text = "$(book)";
+  status.text = "$(loading~spin) Scripture Burrito - verifying";
   status.tooltip = `Verifying and converting -> ${statusTypeText}`;
-  status.color = "yellow";
   status.show();
   await doScriptureHandling(ROOT_PATH,sbMetadata,curHash,sbType);
 
+  status.text = "$(book) ";
   status.tooltip = statusTypeText;
-  status.color = "lightgrey";
   status.show();
   console.log("finished successfully");
 }
