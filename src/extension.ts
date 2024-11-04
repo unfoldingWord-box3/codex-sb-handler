@@ -6,17 +6,21 @@ import {
   workspace,
 } from "vscode";
 import { decomposePerfAction } from './decomposePerf';
-import { SBTreeNavigationProvider } from "./providers/treeViews/scriptureTreeViewProvider";
+// import { reconcileAlignmentAction } from './reconcileAlignment';
+// import { reconcileVerseElements } from './reconcileMarkup';
 import * as path from "path";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 import {Proskomma} from "proskomma-core";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
-import {h32} from "xxhashjs";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
 import { PipelineHandler } from "proskomma-json-tools";
+
+const versesExtStr = "verses";
+const seqExtStr = "seq";
+const alignExtStr = "align";
+const markupExtStr = "uwjmk";
+const usedExtList = [versesExtStr, seqExtStr, alignExtStr, markupExtStr];
 
 const decomposePerf = [
   {
@@ -156,12 +160,12 @@ const writeEntryJson = async (
   }
 };
 
-const checkFileExists = async (uri: vscode.Uri) => {
+const getFileStat = async (uri: vscode.Uri) => {
   try {
-      await vscode.workspace.fs.stat(uri);
-      return true;
+      const statObj = await vscode.workspace.fs.stat(uri);
+      return statObj;
   } catch {
-      return false;
+      return null;
   }
 };
 
@@ -169,10 +173,24 @@ const checkFileIsUpToDate = async (
   workspaceFolder: string | undefined,
   basename: string
 ) => {
-  const usePath = `${workspaceFolder}/uwj/${basename}.verses`;
+  const usePath = `${workspaceFolder}/ingredients/${basename}.usfm`;
   const useUri = vscode.Uri.file(usePath);
-  if (await checkFileExists(useUri)) {
-    return true;
+  const fileStat = await getFileStat(useUri);
+  if (fileStat) {
+    const checkPath = `${workspaceFolder}/uwj/${basename}.verses`;
+    const checkUri = vscode.Uri.file(checkPath);
+    const checkStat = await getFileStat(checkUri);
+    if (checkStat) {
+      if (fileStat?.mtime < checkStat?.mtime) {
+        return true;
+      } else {
+        console.log(`${basename} is not up to date: ${fileStat?.mtime} - ${checkStat?.mtime}`);
+      }
+    } else {
+      console.log("verses file not found !!! -> " + basename);
+    }
+  } else {
+    console.log("USFM file not found !!! " + usePath);
   }
   return false;
 };
@@ -201,20 +219,23 @@ const getBpkg = async (
       textDirection: any; 
       script: any; 
     }, 
-    idStr: any
+    idStr: any,
+    bibleBookVerificationList: string[]
   ) => {
   const bookResources = [];
   const checkbookResources = Object.keys(metadata.ingredients).filter(r => r.endsWith('.usfm'));
   const bookContent: any[] = [];
   for (const book of checkbookResources) {
     const basename = path.basename(trimExt(book));
-    if (await checkFileIsUpToDate(workspaceFolder,basename)) {
-      // const bRes = await readEntryBookResource(workspaceFolder,book);
-      console.log("found : " +basename);
-      // bookContent.push(bRes);
-      // bookResources.push(book);
+    const isUpToDate = await checkFileIsUpToDate(workspaceFolder,basename);
+    if (isUpToDate) {
+      bibleBookVerificationList.push(basename);
+    } else {
+      const bRes = await readEntryBookResource(workspaceFolder,book);
+      bookContent.push(bRes);
+      bookResources.push(book);
     }
-}
+  }
   pk.importDocuments(
       {
           source: "codex",
@@ -240,7 +261,7 @@ const getBpkg = async (
   // writeEntryJson(workspaceFolder,bpkg,`${idStr}.bpkg`);
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  console.log("finished writing book package successfully");
+  // console.log("finished writing book package successfully");
 };
 
 
@@ -266,7 +287,7 @@ async function doPerfStripAlignment(
     const verifyDir = ".";
     const outputDir = `${verifyDir}/uwj/`;
 
-    const versesPath = path.join(outputDir, `${bookName}.verses`);
+    const versesPath = path.join(outputDir, `${bookName}.${versesExtStr}`);
     let verseOutput: string = "";
     Object.keys(output.verseTextMap).forEach(chKey => {
       Object.keys(output.verseTextMap[chKey]).forEach(vKey => {
@@ -275,11 +296,11 @@ async function doPerfStripAlignment(
       });
     });
     await writeEntryText(workspaceFolder, verseOutput, versesPath);
-    const seqPath = path.join(outputDir, `${bookName}.seq`);
+    const seqPath = path.join(outputDir, `${bookName}.${seqExtStr}`);
     await writeEntryJson(workspaceFolder, output.perf, seqPath);
-    const alignPath = path.join(outputDir, `${bookName}.align`);
+    const alignPath = path.join(outputDir, `${bookName}.${alignExtStr}`);
     await writeEntryJson(workspaceFolder, output.extractedAlignment, alignPath);
-    const seqMarkupPath = path.join(outputDir, `${bookName}.uwjmk`);
+    const seqMarkupPath = path.join(outputDir, `${bookName}.${markupExtStr}`);
     await writeEntryJson(workspaceFolder, output.extractedInlineElements, seqMarkupPath);
   } catch (err) {
       console.log(err);
@@ -287,10 +308,12 @@ async function doPerfStripAlignment(
 }
 
 async function doScriptureHandling(
-  workspaceFolder: string | undefined,
-  metadata: any,
-  idStr: string,
-  sbType: string
+  workspaceFolder: string | undefined, 
+  metadata: any, 
+  idStr: string, 
+  sbType: string, 
+  bibleBookVerificationList: string[],
+  inProgressList: string[]
 ) {
     let pk;
     let docSetId;
@@ -332,7 +355,7 @@ async function doScriptureHandling(
                 },
             ]);
 
-            const bpkg = await getBpkg(workspaceFolder, pk, metadata, idStr);
+            const bpkg = await getBpkg(workspaceFolder, pk, metadata, idStr, bibleBookVerificationList);
 
             // check data.bpkg or create one, if read only, else no need for data.bpkg (strip and keep on merging instead)
             // use uwj and codex to ingest, if exist, else create from usfm
@@ -342,6 +365,7 @@ async function doScriptureHandling(
             // const rawBpkg = await readEntryBookResource(workspaceFolder, "f848bc5.bpkg");
             // const bpkg = JSON.parse(rawBpkg || "");
             // pk.loadSuccinctDocSet(bpkg);
+
             const docSetTags = pk.gqlQuerySync('{docSets { tagsKv {key value} } }').data.docSets[0].tagsKv;
             for (const kv of docSetTags) {
                 if (["nOT", "nNT", "nDC"].includes(kv.key)) {
@@ -354,7 +378,7 @@ async function doScriptureHandling(
     
             const docSet = pk.gqlQuerySync('{docSets { id documents { bookCode: header(id: "bookCode") sequences {type} } } }').data.docSets[0];
             docSetId = docSet.id;
-        } catch (err) {
+          } catch (err) {
             const bpkgError = {
                 generatedBy: 'sbHandlerWorker',
                 context: {
@@ -379,10 +403,10 @@ async function doScriptureHandling(
             try {
                 const res = pk.gqlQuerySync(`{ document(id: """${doc.id}""") { bookCode: header(id:"bookCode") perf } }`);
                 const curDoc = res?.data?.document;
-                console.log("Iterating perf from " + curDoc.bookCode);
                 const curPerf = JSON.parse(res?.data?.document?.perf);
                 try {
-                    await doPerfStripAlignment(workspaceFolder, doc.book,curPerf);
+                  await doPerfStripAlignment(workspaceFolder, doc.book,curPerf);
+                  inProgressList.push(curDoc.bookCode);
                 } catch (err) {
                   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                   // @ts-ignore
@@ -518,19 +542,26 @@ const trimExt = (fileName: string) => {
     : fileName.split('.').slice(0, -1).join('.');
 };
 
-const verifyChangedFile = (uri: vscode.Uri) => {
+const verifyChangedFile = (uri: vscode.Uri, checkBookList: string[]) => {
   const uriString = uri.fsPath ?? "";
   const re = /(?:\.([^.]+))?$/;
   const ext = re.exec(uriString)![1];
-  if (["verses", "seq", "align", "uwjmk"].includes(ext)) {
-    const basename = path.basename(trimExt(uriString));
-    console.log("change to " + basename + " - " + ext);
+  const basename = path.basename(trimExt(uriString));
+  if (checkBookList.includes(basename)) {
+    if (usedExtList.includes(ext)) {
+      window.showErrorMessage(
+        `ToDo: Need to run merge code for ${basename} here`
+      );
+    } 
   }
 };
 
 export async function activate(context: ExtensionContext) {
   // Create a status bar item
   const status = window.createStatusBarItem(StatusBarAlignment.Left, 1000000);
+  let bibleBookVerificationList: string[] = [];
+  const inProgressList: string[] = [];
+
   context.subscriptions.push(status);
 
   // const disposable = vscode.commands.registerCommand(
@@ -548,19 +579,12 @@ export async function activate(context: ExtensionContext) {
   const sbMetadata = await getProjectMetadata();
   const ROOT_PATH = await getWorkSpaceFolder();
   const sbVersification = await getSbVersification(ROOT_PATH, sbMetadata);
-  const scriptureTreeViewProvider = new SBTreeNavigationProvider(
-    sbMetadata,
-    sbVersification
-  );
-
-  window.registerTreeDataProvider(
-    "sb-explorer",
-    scriptureTreeViewProvider
-  );
 
 // vscode.workspace.createFileSystemWatcher
   const watcher = workspace.createFileSystemWatcher("**/*.*");
-  watcher.onDidChange(uri => verifyChangedFile(uri));
+  watcher.onDidChange(uri => verifyChangedFile(uri,bibleBookVerificationList));
+  // watcher.onDidCreate(uri =>  ... ); // toDo? - listen to files/folders being created
+  // watcher.onDidDelete(uri => ...); // toDo? - listen to files/folders being deleted
 
 	let statusTypeText = "Scripture Burrito Workspace";
 	const relList = sbMetadata?.relationships;
@@ -583,14 +607,23 @@ export async function activate(context: ExtensionContext) {
       sbType = typeToSbType[relType];      
 		}
 	}
-  const curHash = h32(JSON.stringify(sbMetadata.identification), 0xEDCBA987).toString(16);
+  const curIdStr = "dummyXYZ";
+  // might use a hash of the Scripture Burrito "identification" instead in the future
+  // const curIdStr = h32(JSON.stringify(sbMetadata.identification), 0xEDCBA987).toString(16);
   status.text = "$(loading~spin) Scripture Burrito - verifying";
   status.tooltip = `Verifying and converting -> ${statusTypeText}`;
   status.show();
-  await doScriptureHandling(ROOT_PATH,sbMetadata,curHash,sbType);
-
+  await doScriptureHandling(
+    ROOT_PATH,
+    sbMetadata,
+    curIdStr,
+    sbType,
+    bibleBookVerificationList,
+    inProgressList
+  );
   status.text = "$(book) ";
   status.tooltip = statusTypeText;
   status.show();
+  bibleBookVerificationList = [...bibleBookVerificationList, ...inProgressList];
   console.log("finished successfully");
 }
