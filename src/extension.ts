@@ -484,14 +484,13 @@ async function doMerge(
       );
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      console.log(verseTextMap[1][1]);
       const outputDir = `${verifyDir}/export/`;
       const perfOutputPath = path.join(outputDir, `${bookName}.perf`);
       await writeEntryJson(workspaceFolder, outputStep2.perf, perfOutputPath);
       try {
         const outputStep3 = await pipelineToUsfm.runPipeline(
             'perfToUsfmPipeline', {
-              perf: outputStep2.perf,
+              perf: outputStep1.perf,
             }
         );
         const usfmOutputPath = path.join(outputDir, `${bookName}.usfm`);
