@@ -60,6 +60,7 @@
 	},
 	"dependencies": {
 		"codex-types": "^0.0.2",
+		"eol": "^0.10.0",
 		"fs-extra": "^11.2.0",
 		"proskomma-core": "^0.10.10",
 		"proskomma-json-tools": "^0.8.21",

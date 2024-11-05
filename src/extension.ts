@@ -6,8 +6,8 @@ import {
   workspace,
 } from "vscode";
 import { decomposePerfAction } from './decomposePerf';
-// import { reconcileAlignmentAction } from './reconcileAlignment';
-// import { reconcileVerseElements } from './reconcileMarkup';
+import { reconcileAlignmentAction } from './reconcileAlignment';
+import { reconcileVerseElementsAction } from './reconcileMarkup';
 import * as path from "path";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
@@ -15,12 +15,23 @@ import {Proskomma} from "proskomma-core";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 import { PipelineHandler } from "proskomma-json-tools";
+import * as eol from "eol";
+import XRegExp = require('xregexp');
 
 const versesExtStr = "verses";
 const seqExtStr = "seq";
 const alignExtStr = "align";
 const markupExtStr = "uwjmk";
 const usedExtList = [versesExtStr, seqExtStr, alignExtStr, markupExtStr];
+
+const typeToSbType = {
+  "x-codex-ws": "cdx",
+  "x-usfm-ws": "usfm",
+  "x-usj-ws": "usj",
+  "x-read-only": "ro"
+};
+
+const verbose = false;
 
 const decomposePerf = [
   {
@@ -91,21 +102,159 @@ const decomposePerf = [
   }
 ];
 
-const pipelineH = new PipelineHandler({
+const pipelineStrip = new PipelineHandler({
     pipelines: { decomposePerf },
     transforms: { decomposePerf: decomposePerfAction},
     proskomma: new Proskomma(),
     verbose: false
 });
 
-const typeToSbType = {
-  "x-codex-ws": "cdx",
-  "x-usfm-ws": "usfm",
-  "x-usj-ws": "usj",
-  "x-read-only": "ro"
-};
+const reconcileAlignment = [
+  {
+    "id": 0,
+    "type": "Inputs",
+    "inputs": 
+      {
+        "perf": "json",
+        "extractedAlignment": "json",
+        "verseTextMap": "json"
+      }
+  },
+  {
+    "id": 1,
+    "title": "Reconcile Alignment",
+    "name": "reconcileAlignment",
+    "transformName": "reconcileAlignment",
+    "type": "Transform",
+    "inputs": [
+      {
+        "name": "perf",
+        "type": "json",
+        "source": "Input perf"
+      },
+      {
+        "name": "extractedAlignment",
+        "type": "json",
+        "source": "Input extractedAlignment"
+      },
+      {
+        "name": "verseTextMap",
+        "type": "json",
+        "source": "Input verseTextMap"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "perf",
+        "type": "json"
+      },
+      {
+        "name": "unalignedWords",
+        "type": "json"
+      }
+    ],
+    "description": "PERF=>PERF: Reconciles alignment markup with verse contents"
+  },
+  {
+    "id": 999,
+    "type": "Outputs",
+    "outputs": [
+      {
+        "name": "perf",
+        "type": "json",
+        "source": "Transform 1 perf"
+      },
+      {
+        "name": "unalignedWords",
+        "type": "json",
+        "source": "Transform 1 unalignedWords"
+      }
+    ],
+  }
+];
 
-const verbose = false;
+const pipelineMergeAligned = new PipelineHandler({
+  pipelines: { reconcileAlignment },
+  transforms: { reconcileAlignment: reconcileAlignmentAction},
+  proskomma: new Proskomma(),
+  verbose: false
+});
+
+const reconcileVerseElements = [
+  {
+    "id": 0,
+    "type": "Inputs",
+    "inputs": 
+      {
+        "perf": "json",
+        "extractedInlineElements": "json",
+        "verseTextMap": "json"
+      }
+  },
+  {
+    "id": 1,
+    "title": "Reconcile Verse Elements",
+    "name": "reconcileVerseElements",
+    "transformName": "reconcileVerseElements",
+    "type": "Transform",
+    "inputs": [
+      {
+        "name": "perf",
+        "type": "json",
+        "source": "Input perf"
+      },
+      {
+        "name": "extractedInlineElements",
+        "type": "json",
+        "source": "Input extractedInlineElements"
+      },
+      {
+        "name": "verseTextMap",
+        "type": "json",
+        "source": "Input verseTextMap"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "perf",
+        "type": "json"
+      },
+      {
+        "name": "unreconciledMarkup",
+        "type": "json"
+      }
+    ],
+    "description": "PERF=>PERF: Reconciles verse perf inline elements with contents"
+  },
+  {
+    "id": 999,
+    "type": "Outputs",
+    "outputs": [
+      {
+        "name": "perf",
+        "type": "json",
+        "source": "Transform 1 perf"
+      },
+      {
+        "name": "unreconciledMarkup",
+        "type": "json",
+        "source": "Transform 1 unreconciledMarkup"
+      }
+    ],
+  }
+];
+
+const pipelineMergeElements = new PipelineHandler({
+  pipelines: { reconcileVerseElements },
+  transforms: { reconcileVerseElements: reconcileVerseElementsAction},
+  proskomma: new Proskomma(),
+  verbose: false
+});
+
+const pipelineToUsfm = new PipelineHandler({
+  proskomma: new Proskomma(),
+  verbose: false
+});
 
 const readEntryBookResource = async (
   workspaceFolder: string | undefined,
@@ -158,6 +307,12 @@ const writeEntryJson = async (
       `Failed to write file: ${error.message}`
     );
   }
+};
+
+const trimExt = (fileName: string) => {
+  return (fileName.indexOf('.') === -1)
+    ? fileName 
+    : fileName.split('.').slice(0, -1).join('.');
 };
 
 const getFileStat = async (uri: vscode.Uri) => {
@@ -264,6 +419,93 @@ const getBpkg = async (
   // console.log("finished writing book package successfully");
 };
 
+async function parseVersesLines(text: string | undefined) {
+  const retObj = {};
+  const lines = eol.split(text || "");
+  lines.forEach(function(line) {
+    const res = XRegExp.exec(line, /(\d+):(\d+)\s+(.*)/) || [];
+    if (res.length>2) {
+      const chVal = res[1];
+      const vVal = res[2];
+      const verseStr = res[3];
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      if (!retObj[chVal]) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        retObj[chVal] = {};
+      }
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      retObj[chVal][vVal] = verseStr;
+    }
+  });
+  return retObj;
+}
+
+async function doMerge(
+  workspaceFolder: string | undefined,
+  bookName: any,
+) {
+
+  let outputStep1: { 
+    perf: any;
+    unalignedWords: any; 
+  };
+  let outputStep2: { 
+    perf: any;
+    unreconciledMarkup: any; 
+  };
+  const verifyDir = ".";
+  const sourceDir = `${verifyDir}/uwj/`;
+  const sourcePath = path.join(sourceDir, `${bookName}.output`);
+  const rawMergeSource = await readEntryBookResource(workspaceFolder, sourcePath);
+  const mergeSource =JSON.parse(rawMergeSource || "");  
+  const versesPath = path.join(sourceDir, `${bookName}.verses`);
+  const versesSource = await readEntryBookResource(workspaceFolder, versesPath);
+
+  try {
+    const verseTextMap = await parseVersesLines(versesSource); // parse the actual edited file
+    outputStep1 = await pipelineMergeAligned.runPipeline(
+        'reconcileAlignment', {
+          perf: mergeSource.perf,
+          extractedAlignment: mergeSource.extractedAlignment,
+          // verseTextMap: mergeSource.verseTextMap
+          verseTextMap
+        }
+    );
+    try {
+      outputStep2 = await pipelineMergeElements.runPipeline(
+          'reconcileVerseElements', {
+            perf: outputStep1.perf,
+            extractedInlineElements: mergeSource.extractedInlineElements,
+            verseTextMap
+          }
+      );
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      console.log(verseTextMap[1][1]);
+      const outputDir = `${verifyDir}/export/`;
+      const perfOutputPath = path.join(outputDir, `${bookName}.perf`);
+      await writeEntryJson(workspaceFolder, outputStep2.perf, perfOutputPath);
+      try {
+        const outputStep3 = await pipelineToUsfm.runPipeline(
+            'perfToUsfmPipeline', {
+              perf: outputStep2.perf,
+            }
+        );
+        const usfmOutputPath = path.join(outputDir, `${bookName}.usfm`);
+        await writeEntryText(workspaceFolder, outputStep3.usfm, usfmOutputPath);
+      } catch (err) {
+        console.log(err);
+      }      
+    } catch (err) {
+      console.log(err);
+    }      
+  } catch (err) {
+      console.log(err);
+  }
+}
 
 async function doPerfStripAlignment(
   workspaceFolder: string | undefined,
@@ -278,7 +520,7 @@ async function doPerfStripAlignment(
     extractedInlineElements: any; 
   };
   try {
-    output = await pipelineH.runPipeline(
+    output = await pipelineStrip.runPipeline(
         'decomposePerf', {
             perf
         }
@@ -286,6 +528,9 @@ async function doPerfStripAlignment(
     // const verifyDir = "./test";
     const verifyDir = ".";
     const outputDir = `${verifyDir}/uwj/`;
+
+    const outputPath = path.join(outputDir, `${bookName}.output`);
+    await writeEntryJson(workspaceFolder, output, outputPath);
 
     const versesPath = path.join(outputDir, `${bookName}.${versesExtStr}`);
     let verseOutput: string = "";
@@ -536,13 +781,12 @@ async function getProjectMetadata(): Promise<any> {
   }
   return projectMetadata;
 }
-const trimExt = (fileName: string) => {
-  return (fileName.indexOf('.') === -1)
-    ? fileName 
-    : fileName.split('.').slice(0, -1).join('.');
-};
 
-const verifyChangedFile = (uri: vscode.Uri, checkBookList: string[]) => {
+const verifyChangedFile = (
+  uri: vscode.Uri, 
+  workspaceFolder: string | undefined,
+  checkBookList: string[]
+) => {
   const uriString = uri.fsPath ?? "";
   const re = /(?:\.([^.]+))?$/;
   const ext = re.exec(uriString)![1];
@@ -550,8 +794,9 @@ const verifyChangedFile = (uri: vscode.Uri, checkBookList: string[]) => {
   if (checkBookList.includes(basename)) {
     if (usedExtList.includes(ext)) {
       window.showErrorMessage(
-        `ToDo: Need to run merge code for ${basename} here`
+        `Running merge for ${basename} in the background`
       );
+      doMerge(workspaceFolder,basename);
     } 
   }
 };
@@ -582,7 +827,11 @@ export async function activate(context: ExtensionContext) {
 
 // vscode.workspace.createFileSystemWatcher
   const watcher = workspace.createFileSystemWatcher("**/*.*");
-  watcher.onDidChange(uri => verifyChangedFile(uri,bibleBookVerificationList));
+  watcher.onDidChange(uri => verifyChangedFile(
+    uri,
+    ROOT_PATH,
+    bibleBookVerificationList
+  ));
   // watcher.onDidCreate(uri =>  ... ); // toDo? - listen to files/folders being created
   // watcher.onDidDelete(uri => ...); // toDo? - listen to files/folders being deleted
 

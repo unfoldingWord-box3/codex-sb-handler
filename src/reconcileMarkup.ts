@@ -209,7 +209,7 @@ const reconcileVerseElementsCode = function ({perf,verseTextMap,extractedInlineE
   return { perf: output.perf };
 };
 
-export const reconcileVerseElements = {
+export const reconcileVerseElementsAction = {
   name: "reconcileVerseElements",
   type: "Transform",
   description:
@@ -243,7 +243,7 @@ export const reconcileVerseElements = {
   ],
   code: reconcileVerseElementsCode,
 };
-export default reconcileVerseElements;
+export default reconcileVerseElementsAction;
 
 const lexingRegexes = [
   [
