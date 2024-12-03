@@ -17,7 +17,7 @@ Location based *(directory and filename)*
 
 - A **"strip data conversion"** is run for each Bible book thereby separating all data from the USFM files into various files under an "uwj" subdirectory location
 
-The ufw subdirectory serves as **"a data pool"** for another trigger, where any changes to the text *(pure text, completly stripped from any extra data)* are detected. Whenever such a change is detected, then a "merge data conversion" is run for that very Bible book, where these changes were found. This "merge" results in an updated and exported USFM file in the **./export** directory
+The uwj subdirectory serves as **"a data pool"** for another trigger, where any changes to the text *(pure text, completly stripped from any extra data)* are detected. Whenever such a change is detected, then a "merge data conversion" is run for that very Bible book, where these changes were found. This "merge" results in an updated and exported USFM file in the **./export** directory
 
 ## Helpful future improvement
 
