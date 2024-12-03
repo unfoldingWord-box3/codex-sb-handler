@@ -1,0 +1,406 @@
+{
+  "format": "scripture burrito",
+  "meta": {
+    "version": "1.0.0",
+    "category": "source",
+    "generator": {
+      "softwareName": "Scribe",
+      "softwareVersion": "0.5.5",
+      "userName": "jjgonzales"
+    },
+    "defaultLocale": "en",
+    "dateCreated": "2023-12-06T12:56:00+01:00",
+    "normalization": "NFC"
+  },
+  "idAuthorities": {
+    "scribe": {
+      "id": "http://www.autographa.org",
+      "name": { "en": "Scribe application" }
+    }
+  },
+  "identification": {
+    "primary": {
+      "scribe": {
+        "aa5bf6dc-b271-53d7-a1c9-36404c71c94b": {
+          "revision": "2",
+          "timestamp": "2023-12-06T12:56:00+01:00"
+        }
+      }
+    },
+    "name": { "en": "FR_LSG" },
+    "abbreviation": { "en": "FR_LSG" }
+  },
+  "confidential": false,
+  "relationships": [
+    {
+      "id": "vs-code:codex-ws",
+      "flavor": "x-codex-ws",
+      "relationType": "x-codex-ws",
+      "revision": "first_draft"
+    }
+  ],
+  "languages": [
+    { "tag": "fr", "name": { "en": "French" }, "scriptDirection": "ltr" }
+  ],
+  "type": {
+    "flavorType": {
+      "name": "scripture",
+      "flavor": {
+        "name": "textTranslation",
+        "projectType": "standard",
+        "translationType": "firstTranslation",
+        "audience": "common",
+        "usfmVersion": "3.0.2"
+      },
+      "currentScope": {
+        "MAT": [],
+        "MRK": [],
+        "LUK": [],
+        "JHN": [],
+        "ACT": [],
+        "ROM": [],
+        "1CO": [],
+        "2CO": [],
+        "GAL": [],
+        "EPH": [],
+        "PHP": [],
+        "COL": [],
+        "1TH": [],
+        "2TH": [],
+        "1TI": [],
+        "2TI": [],
+        "TIT": [],
+        "PHM": [],
+        "HEB": [],
+        "JAS": [],
+        "1PE": [],
+        "2PE": [],
+        "1JN": [],
+        "2JN": [],
+        "3JN": [],
+        "JUD": [],
+        "REV": []
+      }
+    }
+  },
+  "copyright": { "licenses": [{ "ingredient": "license.md" }] },
+  "localizedNames": {
+    "MAT": {
+      "short": { "en": "Matthew" },
+      "abbr": { "en": "Matthew" },
+      "long": { "en": "The Good News According to Matthew" }
+    },
+    "MRK": {
+      "short": { "en": "Mark" },
+      "abbr": { "en": "Mark" },
+      "long": { "en": "The Good News According to Mark" }
+    },
+    "LUK": {
+      "short": { "en": "Luke" },
+      "abbr": { "en": "Luke" },
+      "long": { "en": "The Good News According to Luke" }
+    },
+    "JHN": {
+      "short": { "en": "John" },
+      "abbr": { "en": "John" },
+      "long": { "en": "The Good News According to John" }
+    },
+    "ACT": {
+      "short": { "en": "Acts" },
+      "abbr": { "en": "Acts" },
+      "long": { "en": "The Acts of the Apostles" }
+    },
+    "ROM": {
+      "short": { "en": "Romans" },
+      "abbr": { "en": "Romans" },
+      "long": { "en": "Paul’s Letter to the Romans" }
+    },
+    "1CO": {
+      "short": { "en": "1 Corinthians" },
+      "abbr": { "en": "1 Corinthians" },
+      "long": { "en": "Paul’s First Letter to the Corinthians" }
+    },
+    "2CO": {
+      "short": { "en": "2 Corinthians" },
+      "abbr": { "en": "2 Corinthians" },
+      "long": { "en": "Paul’s Second Letter to the Corinthians" }
+    },
+    "GAL": {
+      "short": { "en": "Galatians" },
+      "abbr": { "en": "Galatians" },
+      "long": { "en": "Paul’s Letter to the Galatians" }
+    },
+    "EPH": {
+      "short": { "en": "Ephesians" },
+      "abbr": { "en": "Ephesians" },
+      "long": { "en": "Paul’s Letter to the Ephesians" }
+    },
+    "PHP": {
+      "short": { "en": "Philippians" },
+      "abbr": { "en": "Philippians" },
+      "long": { "en": "Paul’s Letter to the Philippians" }
+    },
+    "COL": {
+      "short": { "en": "Colossians" },
+      "abbr": { "en": "Colossians" },
+      "long": { "en": "Paul’s Letter to the Colossians" }
+    },
+    "1TH": {
+      "short": { "en": "1 Thessalonians" },
+      "abbr": { "en": "1 Thessalonians" },
+      "long": { "en": "Paul’s First Letter to the Thessalonians" }
+    },
+    "2TH": {
+      "short": { "en": "2 Thessalonians" },
+      "abbr": { "en": "2 Thessalonians" },
+      "long": { "en": "Paul’s Second Letter to the Thessalonians" }
+    },
+    "1TI": {
+      "short": { "en": "1 Timothy" },
+      "abbr": { "en": "1 Timothy" },
+      "long": { "en": "Paul’s First Letter to Timothy" }
+    },
+    "2TI": {
+      "short": { "en": "2 Timothy" },
+      "abbr": { "en": "2 Timothy" },
+      "long": { "en": "Paul’s Second Letter to Timothy" }
+    },
+    "TIT": {
+      "short": { "en": "Titus" },
+      "abbr": { "en": "Titus" },
+      "long": { "en": "Paul’s Letter to Titus" }
+    },
+    "PHM": {
+      "short": { "en": "Philemon" },
+      "abbr": { "en": "Philemon" },
+      "long": { "en": "Paul’s Letter to Philemon" }
+    },
+    "HEB": {
+      "short": { "en": "Hebrews" },
+      "abbr": { "en": "Hebrews" },
+      "long": { "en": "The Letter to the Hebrews" }
+    },
+    "JAS": {
+      "short": { "en": "James" },
+      "abbr": { "en": "James" },
+      "long": { "en": "The Letter from James" }
+    },
+    "1PE": {
+      "short": { "en": "1 Peter" },
+      "abbr": { "en": "1 Peter" },
+      "long": { "en": "Peter’s First Letter" }
+    },
+    "2PE": {
+      "short": { "en": "2 Peter" },
+      "abbr": { "en": "2 Peter" },
+      "long": { "en": "Peter’s Second Letter" }
+    },
+    "1JN": {
+      "short": { "en": "1 John" },
+      "abbr": { "en": "1 John" },
+      "long": { "en": "John’s First Letter" }
+    },
+    "2JN": {
+      "short": { "en": "2 John" },
+      "abbr": { "en": "2 John" },
+      "long": { "en": "John’s Second Letter" }
+    },
+    "3JN": {
+      "short": { "en": "3 John" },
+      "abbr": { "en": "3 John" },
+      "long": { "en": "John’s Third Letter" }
+    },
+    "JUD": {
+      "short": { "en": "Jude" },
+      "abbr": { "en": "Jude" },
+      "long": { "en": "The Letter from Jude" }
+    },
+    "REV": {
+      "short": { "en": "Revelation" },
+      "abbr": { "en": "Revelation" },
+      "long": { "en": "The Revelation to John" }
+    }
+  },
+  "ingredients": {
+    "ingredients/MAT.usfm": {
+      "checksum": { "md5": "4b5ea8672df69daac64343cee67d6219" },
+      "mimeType": "text/x-usfm",
+      "size": 3574210,
+      "scope": { "MAT": [] }
+    },
+    "ingredients/MRK.usfm": {
+      "checksum": { "md5": "b3c8312ab70d09e78e659b7cd82f5f77" },
+      "mimeType": "text/x-usfm",
+      "size": 2196850,
+      "scope": { "MRK": [] }
+    },
+    "ingredients/LUK.usfm": {
+      "checksum": { "md5": "ebce0acaecab5d94c3431850091366e7" },
+      "mimeType": "text/x-usfm",
+      "size": 3449942,
+      "scope": { "LUK": [] }
+    },
+    "ingredients/JHN.usfm": {
+      "checksum": { "md5": "90c2a8e084732e72cb4ae4759bf66182" },
+      "mimeType": "text/x-usfm",
+      "size": 3047894,
+      "scope": { "JHN": [] }
+    },
+    "ingredients/ACT.usfm": {
+      "checksum": { "md5": "0575d914ffcd0d374ce94fb7db8c4b16" },
+      "mimeType": "text/x-usfm",
+      "size": 3579575,
+      "scope": { "ACT": [] }
+    },
+    "ingredients/ROM.usfm": {
+      "checksum": { "md5": "c0c842553245ce97c0bb6f2814a8cff8" },
+      "mimeType": "text/x-usfm",
+      "size": 960014,
+      "scope": { "ROM": [] }
+    },
+    "ingredients/1CO.usfm": {
+      "checksum": { "md5": "f132ae4bb7ebf99f8167d8bf1bf1a673" },
+      "mimeType": "text/x-usfm",
+      "size": 904579,
+      "scope": { "1CO": [] }
+    },
+    "ingredients/2CO.usfm": {
+      "checksum": { "md5": "41e51e38e740508bd5fb0d6ffe69a02d" },
+      "mimeType": "text/x-usfm",
+      "size": 589958,
+      "scope": { "2CO": [] }
+    },
+    "ingredients/GAL.usfm": {
+      "checksum": { "md5": "f80728081a4756c43fe450fd0aa48253" },
+      "mimeType": "text/x-usfm",
+      "size": 308882,
+      "scope": { "GAL": [] }
+    },
+    "ingredients/EPH.usfm": {
+      "checksum": { "md5": "b396700df0fe2ad2bab0cb27f617ae7f" },
+      "mimeType": "text/x-usfm",
+      "size": 315645,
+      "scope": { "EPH": [] }
+    },
+    "ingredients/PHP.usfm": {
+      "checksum": { "md5": "7f67b0c8830d3fa816436a7f36c9f7aa" },
+      "mimeType": "text/x-usfm",
+      "size": 354067,
+      "scope": { "PHP": [] }
+    },
+    "ingredients/COL.usfm": {
+      "checksum": { "md5": "3362297f7337e885175be5a48ddbecac" },
+      "mimeType": "text/x-usfm",
+      "size": 214100,
+      "scope": { "COL": [] }
+    },
+    "ingredients/1TH.usfm": {
+      "checksum": { "md5": "be412c9fcf81906e447c52505d8cb8ed" },
+      "mimeType": "text/x-usfm",
+      "size": 191179,
+      "scope": { "1TH": [] }
+    },
+    "ingredients/2TH.usfm": {
+      "checksum": { "md5": "29ba6bdc1de62320377e2d5f76bb3582" },
+      "mimeType": "text/x-usfm",
+      "size": 110260,
+      "scope": { "2TH": [] }
+    },
+    "ingredients/1TI.usfm": {
+      "checksum": { "md5": "f1adda8df6d2c12655eed3e64ec1e3fc" },
+      "mimeType": "text/x-usfm",
+      "size": 242670,
+      "scope": { "1TI": [] }
+    },
+    "ingredients/2TI.usfm": {
+      "checksum": { "md5": "eefb643c23dc05562be334ff972a9219" },
+      "mimeType": "text/x-usfm",
+      "size": 179057,
+      "scope": { "2TI": [] }
+    },
+    "ingredients/TIT.usfm": {
+      "checksum": { "md5": "6b6154a4d8a4ec55d554d4a2e3912d9f" },
+      "mimeType": "text/x-usfm",
+      "size": 144853,
+      "scope": { "TIT": [] }
+    },
+    "ingredients/PHM.usfm": {
+      "checksum": { "md5": "a3c072210819adfa240251fcc5e6ee81" },
+      "mimeType": "text/x-usfm",
+      "size": 41635,
+      "scope": { "PHM": [] }
+    },
+    "ingredients/HEB.usfm": {
+      "checksum": { "md5": "e0bf53d734c4a2c7c594172b97364f52" },
+      "mimeType": "text/x-usfm",
+      "size": 692297,
+      "scope": { "HEB": [] }
+    },
+    "ingredients/JAS.usfm": {
+      "checksum": { "md5": "59c68835d321c955f3b39f45932a2e45" },
+      "mimeType": "text/x-usfm",
+      "size": 368091,
+      "scope": { "JAS": [] }
+    },
+    "ingredients/1PE.usfm": {
+      "checksum": { "md5": "1558d19f8f75b926b5820e2022741d43" },
+      "mimeType": "text/x-usfm",
+      "size": 363662,
+      "scope": { "1PE": [] }
+    },
+    "ingredients/2PE.usfm": {
+      "checksum": { "md5": "42d97a1b9f7f005509bf966cfd2df281" },
+      "mimeType": "text/x-usfm",
+      "size": 234766,
+      "scope": { "2PE": [] }
+    },
+    "ingredients/1JN.usfm": {
+      "checksum": { "md5": "d7953540b1a06a2ab82e5dd7fb657db3" },
+      "mimeType": "text/x-usfm",
+      "size": 417297,
+      "scope": { "1JN": [] }
+    },
+    "ingredients/2JN.usfm": {
+      "checksum": { "md5": "bdd9cf2c655e3a7ce6c64813faad0900" },
+      "mimeType": "text/x-usfm",
+      "size": 51382,
+      "scope": { "2JN": [] }
+    },
+    "ingredients/3JN.usfm": {
+      "checksum": { "md5": "b97ce9dad8174a43abf9cf140f73fa73" },
+      "mimeType": "text/x-usfm",
+      "size": 46786,
+      "scope": { "3JN": [] }
+    },
+    "ingredients/JUD.usfm": {
+      "checksum": { "md5": "39bca90a47271deb86ed0677752cc138" },
+      "mimeType": "text/x-usfm",
+      "size": 94919,
+      "scope": { "JUD": [] }
+    },
+    "ingredients/REV.usfm": {
+      "checksum": { "md5": "a17c5a3b06a67e1eb322ba77e4860399" },
+      "mimeType": "text/x-usfm",
+      "size": 1071694,
+      "scope": { "REV": [] }
+    },
+    "ingredients/versification.json": {
+      "checksum": { "md5": "175efd870b14e7494252302bb1652901" },
+      "mimeType": "application/json",
+      "size": 8873,
+      "role": "x-versification"
+    },
+    "ingredients/license.md": {
+      "checksum": { "md5": "0bf7ef1533f6486c8362dcb8bc19bdd1" },
+      "mimeType": "text/md",
+      "size": 18535,
+      "role": "x-licence"
+    },
+    "ingredients/scribe-settings.json": {
+      "checksum": { "md5": "275ca69c0523d436d8381b446616e3e4" },
+      "mimeType": "application/json",
+      "size": 294,
+      "role": "x-scribe"
+    }
+  }
+}
