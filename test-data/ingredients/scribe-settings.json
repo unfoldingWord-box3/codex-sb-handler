@@ -1,0 +1,18 @@
+{
+  "version": "1.2.2",
+  "project": {
+    "textTranslation": {
+      "scriptDirection": "ltr",
+      "starred": false,
+      "isArchived": false,
+      "versification": "ORG",
+      "description": "FR_LSG",
+      "copyright": "CC BY-SA",
+      "lastSeen": "2023-12-06T12:56:00+01:00",
+      "refResources": [],
+      "bookMarks": [],
+      "font": ""
+    }
+  },
+  "sync": { "services": { "door43": [] } }
+}
